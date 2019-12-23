@@ -10,7 +10,83 @@ vagrant ssh
 ■ 12/23/2019
 ----------------------------------------------------------------------------
 
-*UPDATE* 
+Chavdar@Chavdar-PC MINGW64 ~/shellclass/lvreduce/testlvm (master)
+$ vagrant up
+Bringing machine 'default' up with 'virtualbox' provider...
+==> default: Using C:/Users/Chavdar/shellclass/lvreduce/testlvm for persistent storage.
+==> default: Importing base box 'centos/7'...
+==> default: Matching MAC address for NAT networking...
+==> default: Using C:/Users/Chavdar/shellclass/lvreduce/testlvm for persistent storage.
+==> default: Checking if box 'centos/7' version '1905.1' is up to date...
+==> default: Setting the name of the VM: testlvm_default_1577088518143_56190
+==> default: Vagrant has detected a configuration issue which exposes a
+==> default: vulnerability with the installed version of VirtualBox. The
+==> default: current guest is configured to use an E1000 NIC type for a
+==> default: network adapter which is vulnerable in this version of VirtualBox.
+==> default: Ensure the guest is trusted to use this configuration or update
+==> default: the NIC type using one of the methods below:
+==> default:
+==> default:   https://www.vagrantup.com/docs/virtualbox/configuration.html#default-nic-type
+==> default:   https://www.vagrantup.com/docs/virtualbox/networking.html#virtualbox-nic-type
+==> default: Clearing any previously set network interfaces...
+==> default: Preparing network interfaces based on configuration...
+    default: Adapter 1: nat
+==> default: Forwarding ports...
+    default: 22 (guest) => 2222 (host) (adapter 1)
+==> default: Using C:/Users/Chavdar/shellclass/lvreduce/testlvm for persistent storage.
+==> default: Running 'pre-boot' VM customizations...
+A customization command failed:
+
+["createhd", "--filename", "./secondDisk.vhd", "--format", "VHD", "--variant", "Standard", "--size", 8192]
+
+The following error was experienced:
+
+#<Vagrant::Errors::VBoxManageError: There was an error while executing `VBoxManage`, a CLI used by Vagrant
+for controlling VirtualBox. The command and stderr is shown below.
+
+Command: ["createhd", "--filename", "./secondDisk.vhd", "--format", "VHD", "--variant", "Standard", "--size", "8192"]
+
+Stderr: 0%...
+Progress state: VBOX_E_FILE_ERROR
+VBoxManage.exe: error: Failed to create medium
+VBoxManage.exe: error: Could not create the medium storage unit 'C:\Users\Chavdar\shellclass\lvreduce\testlvm\secondDisk.vhd'.
+VBoxManage.exe: error: VHD: cannot create image 'C:\Users\Chavdar\shellclass\lvreduce\testlvm\secondDisk.vhd' (VERR_ALREADY_EXISTS)
+VBoxManage.exe: error: Details: code VBOX_E_FILE_ERROR (0x80bb0004), component MediumWrap, interface IMedium
+VBoxManage.exe: error: Context: "enum RTEXITCODE __cdecl handleCreateMedium(struct HandlerArg *)" at line 450 of file VBoxManageDisk.cpp
+>
+
+Please fix this customization and try again.
+
+Chavdar@Chavdar-PC MINGW64 ~/shellclass/lvreduce/testlvm (master)
+
+■ 12/23/2019
+----------------------------------------------------------------------------
+
+*UPDATE* Vagrantfile: Fixed variant ('--variant', 'Fixed') to be replaced with Dynamic 
+testlvm_default_1577086608617_45210
+
+*UPDATE* (FIXED) The 'SATA Controller' was 'SATA'. This caused error (wrong provider) 
+
+*UPDATE* [Mon, Dec 23, 2019  8:10:27 AM] Added the followed RUBI code:
+
+  config.vm.provider "virtualbox" do |vb|
+
+	#
+	# Add disk volumes into the machine 
+	#
+	
+	unless File.exist?('./secondDisk.vdi')
+		vb.customize ['createhd', '--filename', './secondDisk.vdi', '--variant', 'Fixed', '--size', 8 * 1024]
+	end
+	unless File.exist?('./thirdDisk.vdi')
+		vb.customize ['createhd', '--filename', './thirdDisk.vdi', '--variant', 'Fixed', '--size', 8 * 1024]
+	end
+	# vb.memory = "1024"
+	vb.customize ['storageattach', :id,  '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', './secondDisk.vdi']
+	vb.customize ['storageattach', :id,  '--storagectl', 'SATA Controller', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', './thirdDisk.vdi']
+
+  end
+
 *UPDATE* Initial file created (blank)
 *UPDATE* Started working on Vagrantfile (see https://github.com/chvdr/testlvm.git)
 
