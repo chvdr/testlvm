@@ -1,0 +1,201 @@
+
+
+
+Create new virtual machine for testing 
+
+vagrant init jasonc/centos7
+vi Vagrantfile
+vagrant up 
+# see the name of the shared directory to be aware where to test scripts
+vagrant ssh
+# vagrant destroy -- will wipe all in the directory (and only docs will stay)
+
+Adding new voume and crete /backups
+
+1. Add new disk volume in VM
+2. Present to the system
+3. Utilize the volume by copying testing data over there
+
+lvcreate -l 2047 -n backup1_lv dbadata
+
+4. ADD sdc1 and sdd1 TO dbadata-backup1_lv
+
+# create new disk 
+
+echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdc > /dev/null
+echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdd > /dev/null
+
+# create PVs
+pvcreate /dev/sdc1 
+pvcreate /dev/sdd1 
+
+# Extend the VG 
+vgextend dbadata /dev/sdc1 /dev/sdd1 
+
+# Extend lv 
+lvextend -l+2047 /dev/dbadata/backup1_lv
+lvextend -l+2047 /dev/dbadata/backup1_lv
+
+# Resize FS 
+resize2fs /dev/dbadata/backup1_lv
+
+5. roll back
+
+# reduce LV
+lvextend -l-4095 /dev/dbadata/backup1_lv
+
+
+# reduce VG 
+
+
+# remove all PVs 
+
+# remove the disk 
+echo -e 'd\nw' | fdisk /dev/sdc
+echo -e 'd\nw' | fdisk /dev/sdd
+
+
+
+
+
+
+■ 12/16/2019
+----------------------------------------------------------------------------
+
+#############################################################
+##                                                         ##
+##                                                         ##
+## HOW TO FIX NETBACKUP TRACK DIRECTORY FILLING UP ROOT FS ##
+##                                                         ##
+##                                                         ##
+#############################################################
+
+>> track_directory_filling_up_root_filesystem
+
+---------------------------------------------------------------------------------------------------------------------------------------
+--                                                                                                                                   --
+-- SOLUTION (CHG0161041 -- https://experian.service-now.com/nav_to.do?uri=change_request.do?sys_id=e7d1973adb243b843b59fbf9f496198e) --
+--                                                                                                                                   --
+---------------------------------------------------------------------------------------------------------------------------------------
+
+
+ls -l /sys/class/scsi_host/
+echo "- - -" > /sys/class/scsi_host/host4/scan
+multipath -ll | grep mpath
+cp /etc/multipath.conf /etc/multipath.conf.CHG0161041
+vi /etc/multipath.conf
+------------------------------- multipath.conf --------------------------
+        multipath {
+                wwid                    360060e80164cf30000014cf300000063
+                alias                   netbackup_disk1
+        }
+------------------------------- multipath.conf --------------------------
+multipath -r
+cfdisk /dev/sde
+lsblk
+pvcreate /dev/mapper/netbackup_disk1_part1
+vgcreate netbackupvg "/dev/mapper/netbackup_disk1_part1"
+/usr/openv/netbackup/bin/goodies/netbackup stop
+mv /usr/openv/netbackup/track /usr/openv/netbackup/track.bak
+mkdir -p /usr/openv/netbackup/track
+vgdisplay netbackupvg
+lvcreate -l 12799 -n tracklv netbackupvg
+cp /etc/fstab /etc/fstab.CHG0161041
+mkfs -t ext3 /dev/netbackupvg/tracklv
+vi /etc/fstab (add the line as per the followed)
+--------------------------------------- /etc/fstab ---------------------------------
+/dev/netbackupvg/tracklv                /usr/openv/netbackup/track      ext3    defaults 0 0
+--------------------------------------- /etc/fstab ---------------------------------
+mount -a
+cd /usr/openv/netbackup/track
+rsync -r /usr/openv/netbackup/track.bak/* .
+/usr/openv/netbackup/bin/goodies/netbackup start
+
+
+
+
+■ 12/16/2019
+----------------------------------------------------------------------------
+
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.disk = './secondDisk.vdi'
+
+Vagrant.configure("2") do |config|
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = "jasonc/centos7"
+
+
+disk1 = './secondDisk.vdi'
+disk2 = './tirdDisk.vdi'
+
+######
+  config.vm.define "iscsitarget" do |iscsitarget|
+    iscsitarget.vm.box = "jasonc/centos7"
+    iscsitarget.vm.hostname = "lvreduce"
+
+    # iscsitarget.vm.network :private_network, ip: "192.168.202.201"
+
+    iscsitarget.vm.provider "virtualbox" do |vb|
+      unless File.exist?(disk1)
+        vb.customize ['createhd', '--filename', disk1, '--variant', 'Fixed', '--size', 1 * 1024]
+      end
+      vb.memory = "1024"
+      vb.customize ['storageattach', :id,  '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', disk1]
+	
+     unless File.exist?(disk2)
+        vb.customize ['createhd', '--filename', disk2, '--variant', 'Fixed', '--size', 1 * 1024]
+      end
+      vb.memory = "1024"
+      vb.customize ['storageattach', :id,  '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', disk2]
+
+end 		# config.vm.define "iscsitarget" do |iscsitarget|
+######
+
+# config.vm.provision "shell", inline: <<-SHELL
+# 	
+# 	#
+# 	# create specific LVM by provision script 
+# 	#
+# 	
+# 	# Create devices
+# 	echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdb > /dev/null
+# 	echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdc > /dev/null
+# 	echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdd > /dev/null
+# 	
+# 	# Create PVs 
+# 	pvcreate /dev/sdb1 /dev/sdc1 /dev/sdd1 
+# 	
+# 	# Create VG 'datavg'
+# 	vgcreate datavg /dev/sdb1 /dev/sdc1 /dev/sdd1 
+# 	
+# 	# Create LV 
+# 	lvcreate -l 2047 -n backup1_lv datavg
+#  
+# 	# Add new volumes in LV:
+# 	# add /dev/sdc1
+# 	lvextend -l+2047 /dev/datavg/backup1_lv
+# 	# add /dev/sdd1
+# 	lvextend -l+2047 /dev/datavg/backup1_lv
+# 	
+# 	# Resize FS 
+# 	resize2fs /dev/datavg/backup1_lv
+# 	
+# 	# -- end of the story --
+# 	
+# SHELL
+# 
+#   
+
+end 	# Vagrant.configure("2") do |config|
+
+end 
