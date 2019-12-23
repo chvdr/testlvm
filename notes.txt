@@ -1,7 +1,4 @@
-
-
-
-Create new virtual machine for testing 
+CREATE NEW VIRTUAL MACHINE FOR TESTING 
 
 vagrant init jasonc/centos7
 vi Vagrantfile
@@ -9,6 +6,16 @@ vagrant up
 # see the name of the shared directory to be aware where to test scripts
 vagrant ssh
 # vagrant destroy -- will wipe all in the directory (and only docs will stay)
+
+■ 12/23/2019
+----------------------------------------------------------------------------
+
+*UPDATE* 
+*UPDATE* Initial file created (blank)
+*UPDATE* Started working on Vagrantfile (see https://github.com/chvdr/testlvm.git)
+
+■ 12/20-22/2019
+----------------------------------------------------------------------------
 
 Adding new voume and crete /backups
 
@@ -53,10 +60,6 @@ lvextend -l-4095 /dev/dbadata/backup1_lv
 # remove the disk 
 echo -e 'd\nw' | fdisk /dev/sdc
 echo -e 'd\nw' | fdisk /dev/sdd
-
-
-
-
 
 
 ■ 12/16/2019
