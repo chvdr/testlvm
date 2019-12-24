@@ -7,6 +7,22 @@ vagrant up
 vagrant ssh
 # vagrant destroy -- will wipe all in the directory (and only docs will stay)
 
+
+■ 12/25/2019
+----------------------------------------------------------------------------
+
+BIOS of laptop has been fixed -- some type of virtualization has not been enabled 
+
+■ 12/24/2019
+----------------------------------------------------------------------------
+
+parted /dev/sdb mklabel msdos
+parted /dev/sdb mkpart primary 512 100%
+mkfs.xfs /dev/sdb1
+mkdir /mnt/disk
+echo `blkid /dev/sdb1 | awk '{print$2}' | sed -e 's/"//g'` /mnt/disk   xfs   noatime,nobarrier   0   0 >> /etc/fstab
+mount /mnt/disk
+
 ■ 12/23/2019
 ----------------------------------------------------------------------------
 

@@ -9,31 +9,31 @@ Vagrant.configure("2") do |config|
   # 
   # Online documentation https://docs.vagrantup.com.
 
-  # config.vm.box = "jasonc/centos7"
-  config.vm.box = "centos/7"
+  config.vm.box = "jasonc/centos7"
+  #config.vm.box = "centos/7"
   config.vm.provider "virtualbox" do |vb|
 
 	#
 	# Add disk volumes into the machine  
 	#
-	
-	# VBoxManage clonemedium [disk|dvd|floppy] <uuid|inputfile> <uuid|outputfile>
-	# [--format VDI|VMDK|VHD|RAW|<other>]
-	# [--variant Standard,Fixed,Split2G,Stream,ESX]
-	# [--existing]
 
+	file_to_disk = './large_disk.vdi'
 	
-	unless File.exist?('./secondDisk.vhd')
-		vb.customize ['createhd', '--filename', './secondDisk.vhd', '--format', 'VHD' , '--variant', 'Fixed', '--size', 8 * 1024]
+	unless File.exist?('file_to_disk')
+		vb.customize ['createhd', '--filename', file_to_disk, '--size', 2 * 1024]
 	end
-	#unless File.exist?('./thirdDisk.vhd')
-	#	vb.customize ['createhd', '--filename', './thirdDisk.vhd', '--variant', 'Fixed', '--size', 8 * 1024]
-	#end
-	# vb.memory = "2048"
-	vb.customize ['storageattach', :id,  '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', './secondDisk.vhd']
-	#vb.customize ['storageattach', :id,  '--storagectl', 'SATA Controller', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', './thirdDisk.vdi']
-
-  end
+	
+	file_to_disk2 = './disk_2.vdi'
+	
+	unless File.exist?('file_to_disk2')
+		vb.customize ['createhd', '--filename', file_to_disk2, '--size', 2 * 1024]
+	end
+	
+	vb.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--type', 'hdd', '--port', 1, '--device', 0, '--medium', file_to_disk]
+	vb.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--type', 'hdd', '--port', 2, '--device', 0, '--medium', file_to_disk2]
+  
+  
+  end 
  
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
