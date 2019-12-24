@@ -120,16 +120,15 @@ lvcreate -l 2047 -n backup1_lv dbadata
 4. ADD sdc1 and sdd1 TO dbadata-backup1_lv
 
 # create new disk 
-
+echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdb > /dev/null
 echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdc > /dev/null
-echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdd > /dev/null
 
 # create PVs
+pvcreate /dev/sdb1 
 pvcreate /dev/sdc1 
-pvcreate /dev/sdd1 
 
 # Extend the VG 
-vgextend dbadata /dev/sdc1 /dev/sdd1 
+vgcreate dbadata /dev/sdb1 /dev/sdc1 
 
 # Extend lv 
 lvextend -l+2047 /dev/dbadata/backup1_lv
