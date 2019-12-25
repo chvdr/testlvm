@@ -13,6 +13,107 @@ vagrant ssh
 
 BIOS of laptop has been fixed -- some type of virtualization has not been enabled 
 
+I. GETTING SPACE FROM THE EXISTING EXT4 VG/LV 
+
+[1]. Gather info
+vgdisplay dbadata
+ls -latr /backups/ 	# <must see test.txt>
+lvs 
+lvscan
+
+[2]. Un-mount and check 
+umount /backups/
+e2fsck -vy /dev/mapper/dbadata-backup1_lv
+e2fsck -f /dev/mapper/dbadata-backup1_lv
+<"0.0% non-contiguous" is what we expect to see here>
+
+[3]. Reduce LV 
+lvdisplay /dev/dbadata/backup1_lv
+lvreduce /dev/dbadata/backup1_lv --size 1.89G
+lvdisplay /dev/dbadata/backup1_lv
+<Expected result: "LV Size 1.89 GiB">
+
+[4]. Reduce VG 
+vgreduce dbadata /dev/sdc1
+
+[5]. Extend FS over new amount of space*** (DANGEROUS!!)
+e2fsck -fy /dev/dbadata/backup1_lv
+resize2fs /dev/dbadata/backup1_lv
+
+II. CREATING NEW XFS DRIVE
+
+[5]. Create new VG (with LV on it) 
+
+[5]. Create XFS on new LV 
+
+
+   6  vgdisplay dbadata
+    7  lvs
+    8  umount /backups/
+    9  e2fsck -vy /dev/mapper/dbadata-backup1_lv
+   10  resize2fs /dev/mapper/dbadata-backup1_lv 511
+   11  e2fsck -f /dev/mapper/dbadata-backup1_lv
+   12  resize2fs /dev/mapper/dbadata-backup1_lv 511
+   13  mount -a
+   14  ll
+   15  df -hT
+   16  resize2fs /dev/mapper/dbadata-backup1_lv 511M
+   17  umount /backups/
+   18  resize2fs /dev/mapper/dbadata-backup1_lv 511M
+   19  e2fsck -f /dev/mapper/dbadata-backup1_lv
+   20  resize2fs /dev/mapper/dbadata-backup1_lv 511M
+   21  lvextend -l -500 /dev/mapper/dbadata-backup1_lv
+   22  lvreduce -l -400 /dev/mapper/dbadata-backup1_lv
+   23  mount -a
+   24  df -hT
+   25  vgreduce dbdata
+   26  vgreduce --help
+   27  vgreduce dbdata /dev/sdc1
+   28  pvs
+   29  vgreduce dbadata /dev/sdc1
+   30  vgreduce dbadata /dev/sdb1
+   31  vgdisplay dbadata
+   32  umount /backups/
+   33  e2fsck -f /dev/mapper/dbadata-backup1_lv
+   34  lvreduce -l -100 /dev/mapper/dbadata-backup1_lv
+   35  e2fsck -f /dev/mapper/dbadata-backup1_lv
+   36  vgreduce dbadata /dev/sdc1
+   37  lsblk
+   38  mount -a
+   39  ll
+   40  ls -latr /backups/
+   41  df -hT /backups
+   42  vgcreate dbdata_NEW
+   43  vgcreate dbdata_NEW /dev/sdc1
+   44  vgdisplay
+   45  history
+   46  lvcreate -l 500 -n backup2_lv dbdata_NEW
+   47  lvs
+   48  mkdir /backups_NEW
+   49  lsblk
+   50  blkid
+   51  mkfs.xfs /dev/mapper/dbdata_NEW-backup2_lv
+   52  lsblk
+   53  blkid
+   54  vi /etc/fstab
+   55  df -hT
+   56  mount -a
+   57  df -hT
+   58  ll /backups
+   59  cd /backups
+   60  touch test.txt
+   61  blkid > test.txt
+   62  w
+   63  cat test.txt
+   64  lsblk
+   65  df -hT
+   66  ll /backups
+   67  mv /backups/test.txt /backups_NEW/
+   68  ls -latr /backups_NEW
+   69  history
+[root@localhost ~]#
+
+
 ■ 12/24/2019
 ----------------------------------------------------------------------------
 

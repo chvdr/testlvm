@@ -50,7 +50,7 @@ Vagrant.configure("2") do |config|
 		echo -e "-- Extending the VG  --"
 		vgcreate dbadata /dev/sdb1 /dev/sdc1 
 		
-		# Extend lv 
+		# Extend lv 1022 extents is the whole added space ~4GB (2x(2GB, each PV))
 		echo -e "-- Creating lv  --"
 		lvcreate -l 1022 -n backup1_lv dbadata
 		
@@ -68,9 +68,12 @@ Vagrant.configure("2") do |config|
 		echo `blkid /dev/dbadata/backup1_lv | awk '{print$2}' | sed -e 's/"//g'` /backups   ext4   noatime,nobarrier   0   0 >> /etc/fstab
         mount /backups
 		
+		echo -e "-- creating testing file [/backups/test.txt] --"
+		blkid > /backups/test.txt
+		
 		# TO DO: df -hT 
 		echo -e "-- Done! --"
-		df -hT 
+		df -hT /backups 
 		
 	SHELL
   
