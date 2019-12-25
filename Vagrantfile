@@ -13,13 +13,13 @@ Vagrant.configure("2") do |config|
 
 	file_to_disk = './large_disk.vdi'
 	
-	unless File.exist?('file_to_disk')
+	unless File.exist?(file_to_disk)
 		vb.customize ['createhd', '--filename', file_to_disk, '--size', 2 * 1024]
 	end
 	
 	file_to_disk2 = './disk_2.vdi'
 	
-	unless File.exist?('file_to_disk2')
+	unless File.exist?(file_to_disk2)
 		vb.customize ['createhd', '--filename', file_to_disk2, '--size', 2 * 1024]
 	end
 	
