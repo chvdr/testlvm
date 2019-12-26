@@ -62,19 +62,28 @@ Vagrant.configure("2") do |config|
 		echo -e "-- Resizing FS  --"
 		resize2fs /dev/dbadata/backup1_lv
 		
-		# TO DO: Edit FSTAB
+		# Edit FSTAB
 		echo -e "-- Editing FSTAB --"
 		mkdir /backups
 		echo `blkid /dev/dbadata/backup1_lv | awk '{print$2}' | sed -e 's/"//g'` /backups   ext4   noatime,nobarrier   0   0 >> /etc/fstab
         mount /backups
 		
-		echo -e "-- creating testing file [/backups/test.txt] --"
-		blkid > /backups/test.txt
+		echo -e "-- creating testing file [/backups/README] --"
+		echo -e "mkdir -p /backups/testfolder/"
+		mkdir -p /backups/testfolder/
 		
-		# TO DO: df -hT 
-		echo -e "-- Done! --"
-		df -hT /backups 
+		echo "history > /backups/README"
+		echo '
+		WELCOME TO YOUR NEW EMPTY LINUX BOX
+				
+		Author:
+		Chavdar Georgiev, 2019 (c). Experian [${date}]
 		
+		' > /backups/README
+		
+		echo "cat /backups/README"
+		cp /backups/README /backups/testfolder/README
+
 	SHELL
   
 end
