@@ -74,15 +74,26 @@ Vagrant.configure("2") do |config|
 		
 		echo "history > /backups/README"
 		echo '
-		WELCOME TO YOUR NEW EMPTY LINUX BOX
+		WELCOME TO YOUR NEW EMPTY LINUX BOX!
 				
 		Author:
-		Chavdar Georgiev, 2019 (c). Experian [${date}]
+		Chavdar Georgiev, Experian SSC UNIX support
+		
+		NOTE: 
+		To revert FS type of backups, simply execute:
+		/vagrant/revert.sh
+		
+		Of course you may compare the output of df -hT before and after that
+		Enjoy!
+		
+		2019 (c). Experian [$(date)]
 		
 		' > /backups/README
 		
 		echo "cat /backups/README"
 		cp /backups/README /backups/testfolder/README
+		
+		cat /backups/testfolder/README
 
 	SHELL
   
