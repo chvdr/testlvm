@@ -73,7 +73,7 @@ Vagrant.configure("2") do |config|
 		mkdir -p /backups/testfolder/
 		
 		echo "history > /backups/README"
-		echo '
+		echo "
 		WELCOME TO YOUR NEW EMPTY LINUX BOX!
 				
 		Author:
@@ -88,7 +88,7 @@ Vagrant.configure("2") do |config|
 		
 		2019 (c). Experian [$(date)]
 		
-		' > /backups/README
+		" > /backups/README
 		
 		echo "cat /backups/README"
 		cp /backups/README /backups/testfolder/README

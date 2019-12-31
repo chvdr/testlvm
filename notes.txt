@@ -10,8 +10,7 @@ USEFUL COMMANDS
 # resorrect the VM 
 vagrant init jasonc/centos7
 vi Vagrantfile
-vagrant up 
-vagrant ssh
+vagrant up && vagrant ssh
 sudo su - 
 
 # To remove bad "^M" symbols
@@ -19,6 +18,7 @@ sed -i -e 's/\r$//' revert.sh
 
 # replace EXT4 with XFS 
 /vagrant/revert.sh
+/vagrant/revert.sh >>/dev/null
 
 # vagrant destroy -- will wipe all in the directory (and only docs will stay)
 echo -e "y\n" | vagrant destroy

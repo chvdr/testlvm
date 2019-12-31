@@ -25,9 +25,11 @@ umount /backups/
 
 # [3]. Reduce LV 
 lvdisplay /dev/dbadata/backup1_lv
-resize2fs /dev/dbadata/backup1_lv 1G							### 1G must match the below
+e2fsck -f /dev/mapper/dbadata-backup1_lv
+# TO DO: add check here ############### RC2 ###############
+if [[ ! $(resize2fs /dev/dbadata/backup1_lv 1G) ]]; then echo -e "FAIL: resize2fs /dev/dbadata/backup1_lv 1G"; fi							
 lvdisplay /dev/dbadata/backup1_lv
-echo -e "y\n" | lvreduce /dev/dbadata/backup1_lv --size 1G		### See '1G' above
+echo -e "y\n" | lvreduce /dev/dbadata/backup1_lv --size 1G		
 # lvreduce /dev/dbadata/backup1_lv --size 1G
 lvdisplay /dev/dbadata/backup1_lv
 # <Expected result: "LV Size 1.00 GiB">
@@ -54,20 +56,24 @@ mount /dev/mapper/dbdata_NEW-backup2_lv /backups_NEW
 mount /dev/mapper/dbadata-backup1_lv /backups
 rsync -zavh /backups/* /backups_NEW
 ls -altr /backups_NEW
-cat /backups_NEW/README.txt 
+cat /backups/README 
 
 # IV. Remove /backups (VG and content)
+umount /backups_NEW
 umount /backups
 echo -e "y\ny\n" | vgremove dbadata
 # vgremove dbadata
 
 # V. Extend "/backups_NEW" with PV "/dev/sdb1", resize LV 
 vgextend dbdata_NEW /dev/sdb1
-lvextend -l +100%FREE /dev/mapper/dbdata_NEW-backup2_lv
+lvextend -l +100%FREE /dev/mapper/dbdata_NEW-backup2_lv || 
+#  xfs_growfs -n /dev/dbdata_NEW/backup2_lv to see the status 
+# xfs_growfs /dev/dbdata_NEW/backup2_lv ATTN: ON MOUNTED FS!!!
 
 # VI. Fix /etc/fstab and recoot to check this out (this is manual context and will not take place here)
 sed -i '/backups/s/^/#/g' /etc/fstab 
 echo `blkid /dev/mapper/dbdata_NEW-backup2_lv | awk '{print$2}' | sed -e 's/"//g'` /backups   xfs   noatime,nobarrier   0   0 >> /etc/fstab
 mount -a 
+xfs_growfs /dev/dbdata_NEW/backup2_lv
 
 exit 0
