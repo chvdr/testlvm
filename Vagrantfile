@@ -4,6 +4,10 @@
 Vagrant.configure("2") do |config|
 
   config.vm.box = "jasonc/centos7"
+  
+  # config.vm.network "bridged" (obsolete, Vagrant v1)
+  
+  # config.vm.network :public_network, :public_network => "eth1"
 
   config.vm.provider "virtualbox" do |vb|
 
@@ -34,8 +38,14 @@ Vagrant.configure("2") do |config|
   # 
 	config.vm.provision "shell", inline: <<-SHELL
 	
-	echo -e "** PROVISION IS TO BEGIN **"
-
+	if [[ -f deployment_complete.lock ]] 
+	then
+	    echo -e "-- skipping provision as already done --"
+		exit 0
+	else 
+	    echo -e "** PROVISION BEGINS **"
+	fi 
+	
 		# create new disk 
 		echo -e "-- creating /dev/sdb1 and /dev/sdc1 using FDISK --"
 		echo -e 'n\n\n\n\n\nt\n8e\nw' | fdisk /dev/sdb > /dev/null
@@ -94,6 +104,9 @@ Vagrant.configure("2") do |config|
 		cp /backups/README /backups/testfolder/README
 		
 		cat /backups/testfolder/README
+		
+		# creating lock file deployment_complete.lock in order to prevent infinite provision
+		touch deployment_complete.lock
 
 	SHELL
   
